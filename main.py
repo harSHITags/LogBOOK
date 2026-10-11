@@ -1,0 +1,39 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app=FastAPI()
+
+class Product(BaseModel):
+     id:int
+     type:str
+     description:str
+     price:int
+     quantity:int
+
+
+products=[
+    Product(id=1 ,type="mobile", description="Samsung" ,price="8999", quantity=377),
+    Product(id=2, type="laptop", description="HP", price="45999", quantity=120),
+    Product(id=3, type="tablet", description="Apple iPad", price="32999", quantity=85) ,
+    Product(id=4, type="headphones", description="Boat", price="1499", quantity=250),
+    Product(id=5, type="smartwatch", description="Noise", price="2499", quantity=175),
+    Product(id=6, type="keyboard", description="Logitech", price="1999", quantity=90),
+]
+
+@app.get("/")
+def get_all_products():
+     return products
+
+@app.get("/products/{id}")
+def get_product_id(id:int):
+     for product in products:
+          if product.id==id:
+               return product
+     return "Not found"
+
+
+@app.post("/")
+def add_product(product:Product):
+     products.append(product)
+     return ("message","succesfully added ")
+          
