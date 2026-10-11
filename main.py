@@ -35,5 +35,6 @@ def get_product_id(id:int):
 @app.post("/")
 def add_product(product:Product):
      products.append(product)
-     return ("message","succesfully added ")
+     return ("message",
+             "succesfully added ")
           
