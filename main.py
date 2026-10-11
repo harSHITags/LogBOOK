@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel
+
 
 app=FastAPI()
 
@@ -25,7 +26,7 @@ def get_all_products():
      return products
 
 @app.get("/products/{id}")
-def get_product_id(id:int):
+def get_product_by_id(id:int):
      for product in products:
           if product.id==id:
                return product
@@ -37,4 +38,24 @@ def add_product(product:Product):
      products.append(product)
      return ("message",
              "succesfully added ")
+
+@app.put("/products/{id}")
+def update_products(id: int, product: Product):
+    for i in range(len(products)):
+        if products[i].id == id:
+            products[i] = product
+            return {
+                "message": "Product updated successfully",
+                "product": products[i]
+            }
+
+    raise HTTPException(status_code=404, detail="Product not found")
+
+@app.delete("/products/{id}")
+def delete_products(id:int):
+     for i in range(len(products)):
+          if products[i].id==id:
+               del products[i]
+               return("product successfully removed")
+     return "not removed"
           
