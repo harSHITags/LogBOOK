@@ -1,8 +1,12 @@
 from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel
+from database import SessionLocal,engine
+import databaseModels
 
 
 app=FastAPI()
+
+databaseModels.Base.metadata.create_all(bind=engine)
 
 class Product(BaseModel):
      id:int
@@ -21,9 +25,12 @@ products=[
     Product(id=6, type="keyboard", description="Logitech", price="1999", quantity=90),
 ]
 
-@app.get("/")
+@app.get("/products")
 def get_all_products():
-     return products
+
+      db=session()
+      db.query()
+      return products
 
 @app.get("/products/{id}")
 def get_product_by_id(id:int):
