@@ -1,14 +1,20 @@
 from fastapi import FastAPI,HTTPException,Depends
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from database import SessionLocal,engine
 from sqlalchemy.orm import Session
 from models import Product
-
-
 import databaseModels
 
 
 app=FastAPI()
+
+app.add_middleware(
+     CORSMiddleware,
+     allow_origins=["http://localhost:3000"],
+     allow_methods=["*"]
+)
+
 
 databaseModels.Base.metadata.create_all(bind=engine)
 
@@ -60,36 +66,41 @@ def get_all_products(db:Session=Depends(get_db)):
     return db_products
 
 @app.get("/products/{id}")
-def get_product_by_id(id:int):
-     for product in products:
-          if product.id==id:
-               return product
-     return "Not found"
+def get_product_by_id(id:int, db:Session=Depends(get_db)):
+    db_product=db.query(databaseModels.Product).filter(databaseModels.Product.id==id).first()
+    if db_product.id:
+        return db_product
+    return "Not found"
 
 
-@app.post("/")
-def add_product(product:Product):
-     products.append(product)
+@app.post("/products")
+def add_product(product:Product, db:Session=Depends(get_db)):
+     db.add(databaseModels.Product(**product.model_dump()))
+     db.commit()
+    
      return ("message",
              "succesfully added ")
 
 @app.put("/products/{id}")
-def update_products(id: int, product: Product):
-    for i in range(len(products)):
-        if products[i].id == id:
-            products[i] = product
-            return {
-                "message": "Product updated successfully",
-                "product": products[i]
-            }
+def update_products(id: int, product: Product,db:Session=Depends(get_db)):
+    db_product=db.query(databaseModels.Product).filter(databaseModels.Product.id==id).first()
+    if db_product:
+         db_product.name=product.name
+         db_product.description=product.description
+         db_product.price=product.price
+         db_product.quantity=product.quantity
+         db.commit()
+         return "product updated"
 
     raise HTTPException(status_code=404, detail="Product not found")
 
 @app.delete("/products/{id}")
-def delete_products(id:int):
-     for i in range(len(products)):
-          if products[i].id==id:
-               del products[i]
-               return("product successfully removed")
-     return "not removed"
+def delete_products(id:int ,db:Session=Depends(get_db)):
+     db_product=db.query(databaseModels.Product).filter(databaseModels.Product.id==id).first()
+     if db_product:
+            db.delete(db_product)
+            db.commit()
+            return("product successfully removed")
+     else:
+            return "not removed"
           
