@@ -3,8 +3,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from database import SessionLocal,engine
 from sqlalchemy.orm import Session
-from models import Product
+from models import Product,UserCreate,LoginRequest
 import databaseModels
+from pwdlib import PasswordHash
+import os
+from datetime import datetime, timedelta, timezone
+import jwt
+from dotenv import load_dotenv
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jwt.exceptions import InvalidTokenError
+
+
+load_dotenv()
+
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+JWT_ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+security = HTTPBearer(auto_error=False)
+
+if not JWT_SECRET_KEY:
+    raise ValueError("JWT_SECRET_KEY is missing from .env")
+
+
+password_hash = PasswordHash.recommended()
 
 
 app=FastAPI()
@@ -15,8 +36,9 @@ app.add_middleware(
      allow_methods=["*"]
 )
 
-
+print("STEP 1: Creating tables...")
 databaseModels.Base.metadata.create_all(bind=engine)
+print("STEP 2: Tables created")
 
 class Product(BaseModel):
      id:int
@@ -55,18 +77,195 @@ def init_db():
 
       db.commit()
 
+print("STEP 3: Initializing database...")
 init_db()
+print("STEP 4: Database initialized")
 
+
+#Register endpoint
+@app.post("/register")
+def register_user(
+    user: UserCreate,
+    db: Session = Depends(get_db)
+):
+    # Check if username already exists
+    existing_user = db.query(databaseModels.User).filter(
+        databaseModels.User.username == user.username
+    ).first()
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Username already exists"
+        )
+
+    # Check if email already exists
+    existing_email = db.query(databaseModels.User).filter(
+        databaseModels.User.email == user.email
+    ).first()
+
+    if existing_email:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
+
+    # Hash the password
+    hashed_password = password_hash.hash(user.password)
+
+    # Create the new user
+    new_user = databaseModels.User(
+        username=user.username,
+        email=user.email,
+        hashed_password=hashed_password
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {
+        "message": "User registered successfully",
+        "id": new_user.id,
+        "username": new_user.username,
+        "email": new_user.email
+    }
+
+#Token generation
+def create_access_token(username: str):
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+
+    payload = {
+        "sub": username,
+        "exp": expires_at
+    }
+
+    token = jwt.encode(
+        payload,
+        JWT_SECRET_KEY,
+        algorithm=JWT_ALGORITHM
+    )
+
+    return token
+
+
+#Log IN Endpoints
+@app.post("/login")
+def login_user(
+    user: LoginRequest,
+    db: Session = Depends(get_db)
+):
+    # Find the user by username
+    existing_user = db.query(databaseModels.User).filter(
+        databaseModels.User.username == user.username
+    ).first()
+
+    # Reject invalid credentials
+    if not existing_user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid username or password"
+        )
+
+    # Compare entered password with stored hash
+    password_is_correct = password_hash.verify(
+        user.password,
+        existing_user.hashed_password
+    )
+
+    if not password_is_correct:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid username or password"
+        )
+
+    access_token = create_access_token(existing_user.username) 
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+        }
+
+#current User
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+    # Reject requests without a token
+    if credentials is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    token = credentials.credentials
+
+    try:
+        # Verify the token's signature and expiry
+        payload = jwt.decode(
+            token,
+            JWT_SECRET_KEY,
+            algorithms=[JWT_ALGORITHM]
+        )
+
+        username = payload.get("sub")
+
+        if not username:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token"
+            )
+
+    except InvalidTokenError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    # Find the user associated with the token
+    current_user = db.query(databaseModels.User).filter(
+        databaseModels.User.username == username
+    ).first()
+
+    if current_user is None:
+        raise HTTPException(
+            status_code=401,
+            detail="User not found"
+        )
+
+    return current_user
+
+#current admin
+def get_current_admin(
+    current_user: databaseModels.User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access required"
+        )
+
+    return current_user
+
+# Products EndPoints
 @app.get("/products")
-def get_all_products(db:Session=Depends(get_db)):
-
-    
-    db_products=db.query(databaseModels.Product).all()
-
+def get_all_products(
+    db: Session = Depends(get_db),
+    current_user: databaseModels.User = Depends(get_current_user)
+):
+    db_products = db.query(databaseModels.Product).all()
     return db_products
 
 @app.get("/products/{id}")
-def get_product_by_id(id:int, db:Session=Depends(get_db)):
+def get_product_by_id(id:int, 
+                      db:Session=Depends(get_db),
+                      current_user: databaseModels.User = Depends(get_current_user)
+                      ):
+ 
     db_product=db.query(databaseModels.Product).filter(databaseModels.Product.id==id).first()
     if db_product.id:
         return db_product
@@ -74,7 +273,10 @@ def get_product_by_id(id:int, db:Session=Depends(get_db)):
 
 
 @app.post("/products")
-def add_product(product:Product, db:Session=Depends(get_db)):
+def add_product(product:Product, 
+                db:Session=Depends(get_db),
+                current_user: databaseModels.User = Depends(get_current_user)
+                ):
      db.add(databaseModels.Product(**product.model_dump()))
      db.commit()
     
@@ -82,7 +284,11 @@ def add_product(product:Product, db:Session=Depends(get_db)):
              "succesfully added ")
 
 @app.put("/products/{id}")
-def update_products(id: int, product: Product,db:Session=Depends(get_db)):
+def update_products(id: int, product: Product,
+                    db:Session=Depends(get_db),
+                    current_user: databaseModels.User = Depends(get_current_user)
+                    ):
+   
     db_product=db.query(databaseModels.Product).filter(databaseModels.Product.id==id).first()
     if db_product:
          db_product.name=product.name
@@ -95,7 +301,11 @@ def update_products(id: int, product: Product,db:Session=Depends(get_db)):
     raise HTTPException(status_code=404, detail="Product not found")
 
 @app.delete("/products/{id}")
-def delete_products(id:int ,db:Session=Depends(get_db)):
+def delete_products(id:int ,
+                    db:Session=Depends(get_db),
+                    current_user: databaseModels.User = Depends(get_current_admin)
+                    ):
+ 
      db_product=db.query(databaseModels.Product).filter(databaseModels.Product.id==id).first()
      if db_product:
             db.delete(db_product)
