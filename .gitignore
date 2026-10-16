@@ -28,6 +28,7 @@ myenv/
 venv/
 env/
 ENV/
+.venv
 
 # Node.js
 node_modules/
