@@ -31,9 +31,11 @@ password_hash = PasswordHash.recommended()
 app=FastAPI()
 
 app.add_middleware(
-     CORSMiddleware,
-     allow_origins=["http://localhost:3000"],
-     allow_methods=["*"]
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 print("STEP 1: Creating tables...")
@@ -252,65 +254,122 @@ def get_current_admin(
     return current_user
 
 # Products EndPoints
+
 @app.get("/products")
 def get_all_products(
     db: Session = Depends(get_db),
     current_user: databaseModels.User = Depends(get_current_user)
 ):
-    db_products = db.query(databaseModels.Product).all()
+    db_products = (
+        db.query(databaseModels.Product)
+        .filter(databaseModels.Product.user_id == current_user.id)
+        .all()
+    )
+
     return db_products
 
+
+
 @app.get("/products/{id}")
-def get_product_by_id(id:int, 
-                      db:Session=Depends(get_db),
-                      current_user: databaseModels.User = Depends(get_current_user)
-                      ):
- 
-    db_product=db.query(databaseModels.Product).filter(databaseModels.Product.id==id).first()
-    if db_product.id:
-        return db_product
-    return "Not found"
+def get_product_by_id(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: databaseModels.User = Depends(get_current_user)
+):
+    db_product = (
+        db.query(databaseModels.Product)
+        .filter(
+            databaseModels.Product.id == id,
+            databaseModels.Product.user_id == current_user.id
+        )
+        .first()
+    )
+
+    if db_product is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+
+    return db_product
 
 
 @app.post("/products")
-def add_product(product:Product, 
-                db:Session=Depends(get_db),
-                current_user: databaseModels.User = Depends(get_current_user)
-                ):
-     db.add(databaseModels.Product(**product.model_dump()))
-     db.commit()
-    
-     return ("message",
-             "succesfully added ")
+def add_product(
+    product: Product,
+    db: Session = Depends(get_db),
+    current_user: databaseModels.User = Depends(get_current_user)
+):
+    new_product = databaseModels.Product(
+        name=product.name,
+        description=product.description,
+        price=product.price,
+        quantity=product.quantity,
+        user_id=current_user.id
+    )
+
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
+
+    return new_product
 
 @app.put("/products/{id}")
-def update_products(id: int, product: Product,
-                    db:Session=Depends(get_db),
-                    current_user: databaseModels.User = Depends(get_current_user)
-                    ):
-   
-    db_product=db.query(databaseModels.Product).filter(databaseModels.Product.id==id).first()
-    if db_product:
-         db_product.name=product.name
-         db_product.description=product.description
-         db_product.price=product.price
-         db_product.quantity=product.quantity
-         db.commit()
-         return "product updated"
+def update_products(
+    id: int,
+    product: Product,
+    db: Session = Depends(get_db),
+    current_user: databaseModels.User = Depends(get_current_user)
+):
+    db_product = (
+        db.query(databaseModels.Product)
+        .filter(
+            databaseModels.Product.id == id,
+            databaseModels.Product.user_id == current_user.id
+        )
+        .first()
+    )
 
-    raise HTTPException(status_code=404, detail="Product not found")
+    if db_product is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+
+    db_product.name = product.name
+    db_product.description = product.description
+    db_product.price = product.price
+    db_product.quantity = product.quantity
+
+    db.commit()
+    db.refresh(db_product)
+
+    return db_product
+
+
 
 @app.delete("/products/{id}")
-def delete_products(id:int ,
-                    db:Session=Depends(get_db),
-                    current_user: databaseModels.User = Depends(get_current_admin)
-                    ):
- 
-     db_product=db.query(databaseModels.Product).filter(databaseModels.Product.id==id).first()
-     if db_product:
-            db.delete(db_product)
-            db.commit()
-            return("product successfully removed")
-     else:
-            return "not removed"
-          
+def delete_products(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: databaseModels.User = Depends(get_current_admin)
+):
+    db_product = (
+        db.query(databaseModels.Product)
+        .filter(
+            databaseModels.Product.id == id,
+            databaseModels.Product.user_id == current_user.id
+        )
+        .first()
+    )
+
+    if db_product is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+
+    db.delete(db_product)
+    db.commit()
+
+    return {"message": "Product successfully removed"}

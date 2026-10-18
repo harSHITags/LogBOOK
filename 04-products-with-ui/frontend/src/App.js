@@ -2,12 +2,28 @@ import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import "./App.css";
 import TaglineSection from "./TaglineSection";
+import Login from "./components/Login";
+import Register from "./components/Register";
+
 
 const api = axios.create({
   baseURL: "http://localhost:8000",
 });
 
+// Automatically attach the JWT to API requests
+api.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem("access_token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+
 function App() {
+  
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({
     id: "",
@@ -23,6 +39,71 @@ function App() {
   const [filter, setFilter] = useState("");
   const [sortField, setSortField] = useState("id");
   const [sortDirection, setSortDirection] = useState("asc");
+
+   const [token, setToken] = useState(
+    () => sessionStorage.getItem("access_token") || ""
+  );
+
+  const [authError, setAuthError] = useState("");
+
+  const [showRegister, setShowRegister] = useState(false);
+  const [registerMessage, setRegisterMessage] = useState("");
+
+  // Login handler
+  const handleLogin = async (username, password) => {
+    try {
+      setAuthError("");
+
+      const response = await api.post("/login", {
+        username: username,
+        password: password,
+      });
+
+      const accessToken = response.data.access_token;
+
+      sessionStorage.setItem("access_token", accessToken);
+      setToken(accessToken);
+    } catch (err) {
+      setAuthError(
+        err.response?.data?.detail ||
+        "Login failed. Please check your credentials."
+      );
+    }
+  };
+
+  const handleLogout = () => {
+  sessionStorage.removeItem("access_token");
+  setToken("");
+  setProducts([]);
+};
+
+
+const handleRegister = async (username, email, password) => {
+  try {
+    setAuthError("");
+    setRegisterMessage("");
+
+    const response = await api.post("/register", {
+      username,
+      email,
+      password,
+    });
+
+    setRegisterMessage(
+      response.data.message || "Registration successful!"
+    );
+
+    setShowRegister(false);
+  } catch (err) {
+    setAuthError(
+      err.response?.data?.detail ||
+      "Registration failed. Please try again."
+    );
+  }
+};
+
+
+  
 
   // Auto-dismiss messages after 5 seconds
   useEffect(() => {
@@ -194,6 +275,37 @@ function App() {
   const currency = (n) =>
     typeof n === "number" ? n.toFixed(2) : Number(n || 0).toFixed(2);
 
+
+  
+  if (!token) {
+  if (showRegister) {
+    return (
+      <Register
+        onRegister={handleRegister}
+        onShowLogin={() => {
+          setShowRegister(false);
+          setAuthError("");
+          setRegisterMessage("");
+        }}
+        authError={authError}
+        message={registerMessage}
+      />
+    );
+  }
+
+  return (
+    <Login
+      onLogin={handleLogin}
+      onShowRegister={() => {
+        setShowRegister(true);
+        setAuthError("");
+        setRegisterMessage("");
+      }}
+      authError={authError}
+    />
+  );
+}
+
   return (
     <div className="app-bg">
       <header className="topbar">
@@ -205,8 +317,17 @@ function App() {
           <button className="btn btn-light" onClick={fetchProducts} disabled={loading}>
             Refresh
           </button>
+          
+  <button
+    className="btn btn-delete"
+    onClick={handleLogout}
+  >
+    Logout
+  </button>
+
         </div>
       </header>
+      
 
       <div className="container">
         <div className="stats">

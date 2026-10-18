@@ -1,6 +1,6 @@
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column,Integer,String,Float
+from sqlalchemy import Column,Integer,String,Float,ForeignKey
 
 Base=declarative_base()
 
@@ -23,3 +23,4 @@ class Product(Base):
     description=Column(String)
     price=Column(Float)
     quantity=Column(Integer)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
