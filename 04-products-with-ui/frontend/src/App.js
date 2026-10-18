@@ -137,21 +137,27 @@ const handleRegister = async (username, email, password) => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    // Inline initial fetch to avoid referencing external deps
-    const run = async () => {
-      setLoading(true);
-      try {
-        const res = await api.get("/products/");
-        setProducts(res.data);
-        setError("");
-      } catch (err) {
-        setError("Failed to fetch products");
-      }
+  
+useEffect(() => {
+  if (!token) return;
+
+  const run = async () => {
+    setLoading(true);
+
+    try {
+      const res = await api.get("/products/");
+      setProducts(res.data);
+      setError("");
+    } catch (err) {
+      setError("Failed to fetch products");
+    } finally {
       setLoading(false);
-    };
-    run();
-  }, []);
+    }
+  };
+
+  run();
+}, [token]);
+
 
   // Handle sorting
   const handleSort = (field) => {
