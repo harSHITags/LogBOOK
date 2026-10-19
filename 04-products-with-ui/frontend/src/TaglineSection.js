@@ -1,19 +1,14 @@
-import React from 'react';
-import './TaglineSection.css';
+import React from "react";
+import "./TaglineSection.css";
 
-const TaglineSection = () => {
-  return (
-    <div className="tagline-card">
-      <div className="tagline-content">
-        <h3>📈 Track. Manage. Grow.</h3>
-        <p>Streamline your inventory with smart product management that scales with your business.</p>
-        <div className="company-badge">
-          
-          <span className="company-name">LogBook</span>
-        </div>
-      </div>
-    </div>
-  );
-};
+const TaglineSection = () => (
+  <section className="tagline" aria-label="About LogBook">
+    <p className="tagline-title">Track. Manage. Grow.</p>
+    <p className="tagline-text">
+      Streamline your inventory with smart product management that scales with your business.
+    </p>
+    <span className="tagline-brand">LogBook</span>
+  </section>
+);
 
 export default TaglineSection;

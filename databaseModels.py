@@ -24,3 +24,4 @@ class Product(Base):
     price=Column(Float)
     quantity=Column(Integer)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    user_product_number = Column(Integer, nullable=True)

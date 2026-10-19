@@ -1,69 +1,44 @@
-
-.tagline-card {
-  background: #FFFEFA;
-  border: 1px solid #E7E2D8;
-  border-radius: 14px;
-  box-shadow: 0 4px 14px rgba(45, 52, 43, 0.05);
-  padding: 24px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.tagline-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #496653, #91A58F, #C4775A);
-}
-
-.tagline-content h3 {
-  margin: 0 0 12px;
-  font-size: 22px;
-  font-weight: 700;
-  color: #354D3D;
-  letter-spacing: 0.2px;
-}
-
-.tagline-content p {
-  margin: 0 auto 20px;
-  color: #7C827A;
-  font-size: 15px;
-  line-height: 1.7;
-  max-width: 320px;
-  font-style: italic;
-}
-
-.company-badge {
-  display: flex;
+/* Uses the tokens defined in App.css; fallbacks keep it usable on its own. */
+.tagline {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: #F5F2EA;
-  border: 1px solid #E5E0D5;
-  border-radius: 9px;
-  margin: 0 auto;
-  max-width: fit-content;
-  box-shadow: none;
+  gap: 12px 32px;
+  padding: 22px 28px;
+  border: 1px solid var(--sage-line, #D5DED2);
+  border-radius: 16px;
+  background: var(--sage-soft, #E8EDE5);
 }
 
-.powered-by {
-  font-size: 11px;
-  color: #85877E;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+.tagline-title {
+  margin: 0;
+  color: var(--sage-deep, #354D3D);
+  font: 600 22px/1.2 var(--font-display, "DM Sans", system-ui, sans-serif);
+  letter-spacing: -0.015em;
+  white-space: nowrap;
 }
 
-.company-name {
-  font-size: 18px;
-  font-weight: 800;
-  color: #496653;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+.tagline-text {
+  margin: 0;
+  max-width: 56ch;
+  color: var(--ink-2, #4C584F);
+  font-size: 15px;
+  line-height: 1.6;
 }
 
+.tagline-brand {
+  color: var(--sage, #496653);
+  font: 700 18px/1 var(--font-display, "DM Sans", system-ui, sans-serif);
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 760px) {
+  .tagline {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .tagline-title {
+    white-space: normal;
+  }
+}
