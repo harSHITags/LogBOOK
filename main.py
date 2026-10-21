@@ -12,6 +12,7 @@ import jwt
 from dotenv import load_dotenv
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt.exceptions import InvalidTokenError
+from sqlalchemy import func
 
 
 load_dotenv()
@@ -300,19 +301,33 @@ def add_product(
     db: Session = Depends(get_db),
     current_user: databaseModels.User = Depends(get_current_user)
 ):
+    # Step 1: Find this user's highest product number
+    last_number = db.query(
+        func.max(databaseModels.Product.user_product_number)
+    ).filter(
+        databaseModels.Product.user_id == current_user.id
+    ).scalar()
+
+    # Step 2: Generate the next number for this user
+    next_number = (last_number or 0) + 1
+
+    # Step 3: Create the product
     new_product = databaseModels.Product(
         name=product.name,
         description=product.description,
         price=product.price,
         quantity=product.quantity,
-        user_id=current_user.id
+        user_id=current_user.id,
+        user_product_number=next_number
     )
 
+    # Step 4: Save it to the database
     db.add(new_product)
     db.commit()
     db.refresh(new_product)
 
     return new_product
+
 
 @app.put("/products/{id}")
 def update_products(

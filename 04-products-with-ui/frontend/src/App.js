@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import "./App.css";
@@ -279,7 +280,7 @@ function App() {
       if (stockFilter !== "all" && getStockStatus(product.quantity) !== stockFilter) return false;
       if (!q) return true;
       return (
-        String(product.id).includes(q) ||
+        String(product.user_product_number).includes(q) ||
         product.name?.toLowerCase().includes(q) ||
         product.description?.toLowerCase().includes(q)
       );
@@ -381,13 +382,13 @@ function App() {
 
   const handleEdit = (product) => {
     setForm({
-      id: product.id,
+      id: product.user_product_number,
       name: product.name ?? "",
       description: product.description ?? "",
       price: product.price,
       quantity: product.quantity,
     });
-    setEditId(product.id);
+    setEditId(product.user_product_number);
     setMessage("");
     setError("");
     focusForm();
@@ -780,8 +781,8 @@ function App() {
                     {filteredProducts.map((product) => {
                       const status = getStockStatus(product.quantity);
                       return (
-                        <tr key={product.id} className={editId === product.id ? "is-editing" : undefined}>
-                          <td className="cell-id">#{product.id}</td>
+                        <tr key={product.user_product_number} className={editId === product.user_product_number ? "is-editing" : undefined}>
+                          <td className="cell-id">#{product.user_product_number}</td>
                           <td className="cell-product">
                             <span className="product-name">{product.name}</span>
                             {product.description && (
