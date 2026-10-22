@@ -255,7 +255,6 @@ def get_current_admin(
     return current_user
 
 # Products EndPoints
-
 @app.get("/products")
 def get_all_products(
     db: Session = Depends(get_db),
@@ -268,7 +267,6 @@ def get_all_products(
     )
 
     return db_products
-
 
 
 @app.get("/products/{id}")
