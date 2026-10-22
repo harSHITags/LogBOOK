@@ -1,6 +1,6 @@
 import React from "react";
 
-// Decorative sample data: shows what the product looks like before sign-in.
+//   Decorative sample data: shows what the product looks like before sign-in.
 const SAMPLE_ROWS = [
   { name: "Ceramic pour-over set", price: "₹1,899.00", qty: 42, status: "in", label: "In stock" },
   { name: "Canvas tote, natural", price: "₹649.00", qty: 7, status: "low", label: "Low stock" },
