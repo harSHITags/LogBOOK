@@ -229,7 +229,7 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    # Find the user associated with the token
+    #  Find the user associated with the token
     current_user = db.query(databaseModels.User).filter(
         databaseModels.User.username == username
     ).first()
