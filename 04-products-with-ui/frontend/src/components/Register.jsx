@@ -9,7 +9,7 @@ function Register({ onRegister, onShowLogin, authError, message }) {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // A successful registration unmounts this component, so guard the state update.
+  // successful registration unmounts this component, so guard the state update.
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
