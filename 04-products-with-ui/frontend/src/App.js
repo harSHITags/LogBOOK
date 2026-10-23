@@ -419,7 +419,7 @@ function App() {
     }
   };
 
-  /* ------- delete dialog: focus, Escape, focus trap, scroll lock ----- */
+  /*---- delete dialog: focus, Escape, focus trap, scroll lock ----- */
 
   useEffect(() => {
     if (!deleteTarget) return undefined;
