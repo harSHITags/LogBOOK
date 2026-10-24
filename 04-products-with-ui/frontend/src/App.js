@@ -314,7 +314,7 @@ function App() {
   const needsRestock = stats.low + stats.out;
   const isFiltered = filter.trim() !== "" || stockFilter !== "all";
 
-  /* ---------- table & form handlers ---------- */
+  /*  table & form handlers  */
 
   const handleSort = (field) => {
     if (sortField === field) {
