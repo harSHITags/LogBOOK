@@ -335,8 +335,8 @@ function App() {
     setForm((current) => ({ ...current, [name]: value }));
   };
 
-  // On small screens the form is collapsed; open it, bring it into view and
-  // move focus to the first field so keyboard users land in the right place.
+  //   On small screens the form is collapsed; open it, bring it into view and
+  //    move focus to the first field so keyboard users land in the right place.
   const focusForm = useCallback(() => {
     setFormOpen(true);
     requestAnimationFrame(() => {
