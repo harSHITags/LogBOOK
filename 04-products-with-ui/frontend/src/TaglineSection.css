@@ -1,4 +1,5 @@
 /* Uses the tokens defined in App.css; fallbacks keep it usable on its own. */
+
 .tagline {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
