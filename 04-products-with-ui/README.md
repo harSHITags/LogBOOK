@@ -6,7 +6,7 @@ A comprehensive product inventory management system built with FastAPI backend a
 ## Features
 
 - **GET /**: Welcome endpoint
-- **GET /products/**:  Get all products
+- **GET /products/**: Get all products
 - **GET /products/{product_id}**: Get a specific product by ID
 - **POST /products/**: Create a new product
 
