@@ -6,7 +6,7 @@ A comprehensive product inventory management system built with FastAPI backend a
 ## Features
 
 - **GET /**: Welcome endpoint
-- **GET /products/**: Get all products
+- **GET /products/**:  Get all products
 - **GET /products/{product_id}**: Get a specific product by ID
 - **POST /products/**: Create a new product
 
@@ -15,7 +15,7 @@ A comprehensive product inventory management system built with FastAPI backend a
 1. **Create and activate virtual environment:**
    ```bash
    python -m venv myenv
-   myenv\Scripts\activate.ps1  # Windows PowerShell
+   myenv\Scripts\activate.ps1     # Windows PowerShell
    ```
 
 2. **Install dependencies:**
