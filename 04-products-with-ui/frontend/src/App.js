@@ -1,10 +1,11 @@
-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import "./App.css";
 import TaglineSection from "./TaglineSection";
 import Login from "./components/Login";
 import Register from "./components/Register";
+
+
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || "http://localhost:8000",
@@ -166,6 +167,7 @@ function App() {
   const [authError, setAuthError] = useState("");
   const [showRegister, setShowRegister] = useState(false);
   const [registerMessage, setRegisterMessage] = useState("");
+  const [generatingDescription, setGeneratingDescription] = useState(false); // AI description request in flight
 
   const formPanelRef = useRef(null);
   const nameInputRef = useRef(null);
@@ -333,6 +335,30 @@ function App() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((current) => ({ ...current, [name]: value }));
+  };
+
+  // Ask the backend (Gemini) to draft a description for the current product name.
+  // The result goes into the normal form state, so it stays editable and is only
+  // saved when the user clicks Add product / Save changes.
+  const handleGenerateDescription = async () => {
+    const name = form.name.trim();
+    if (!name || generatingDescription) return;
+
+    setGeneratingDescription(true);
+    setError("");
+
+    try {
+      const res = await api.post("/products/generate-description", {
+        name,
+        category: "General",
+      });
+      const generated = res.data?.description ?? "";
+      setForm((current) => ({ ...current, description: generated }));
+    } catch (err) {
+      setError(getErrorMessage(err, "Couldn’t generate a description. Please try again."));
+    } finally {
+      setGeneratingDescription(false);
+    }
   };
 
   //   On small screens the form is collapsed; open it, bring it into view and
@@ -595,7 +621,17 @@ function App() {
                 />
               </div>
               <div className="field field-full">
-                <label htmlFor="product-description">Description</label>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
+                  <label htmlFor="product-description">Description</label>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={handleGenerateDescription}
+                    disabled={!form.name.trim() || generatingDescription}
+                  >
+                    {generatingDescription ? "Generating..." : "✨ Generate with AI"}
+                  </button>
+                </div>
                 <textarea
                   id="product-description"
                   name="description"
@@ -650,6 +686,10 @@ function App() {
                   />
                 </div>
               </div>
+                    
+
+
+              
               <div className="form-actions">
                 <button className="btn btn-primary" type="submit" disabled={saving}>
                   {!isEditing && !saving && <Icon name="plus" size={16} />}

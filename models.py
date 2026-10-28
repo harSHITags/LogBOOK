@@ -17,3 +17,11 @@ class UserCreate(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+class DescriptionRequest(BaseModel):
+    name: str
+    category: str
+
+class InventoryAdviceRequest(BaseModel):
+    low_stock_threshold: int = 5
