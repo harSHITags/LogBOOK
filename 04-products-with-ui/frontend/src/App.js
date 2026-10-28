@@ -527,7 +527,11 @@ function App() {
     <div className="app-bg">
       <header className="topbar">
         <a className="brand" href="/" aria-label="LogBook home">
-          <img src="/logbook-logo.png" alt="LogBook logo" className="logo-image logo-image-header" />
+          <img
+  src="/stocksphere-logo.png"
+  alt="StockSphere"
+  className="logo-image logo-image-header"
+/>
           <span className="brand-sub">Inventory workspace</span>
         </a>
         <div className="top-actions">

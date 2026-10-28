@@ -10,7 +10,11 @@ const SAMPLE_ROWS = [
 function AuthShowcase({ title, text, footer }) {
   return (
     <aside className="auth-showcase">
-      <img src="/logbook-logo.png" alt="LogBook logo" className="logo-image logo-image-auth" />
+     <img
+  src="/stocksphere-logo.png"
+  alt="StockSphere"
+  className="logo-image logo-image-header"
+/>
 
       <div className="showcase-copy">
         <h2>{title}</h2>

@@ -36,7 +36,11 @@ function Login({ onLogin, onShowRegister, authError, message }) {
 
       <div className="auth-main">
         <div className="auth-mobile-brand">
-          <img src="/logbook-logo.png" alt="LogBook logo" className="logo-image logo-image-mobile" />
+         <img
+  src="/stocksphere-logo.png"
+  alt="StockSphere"
+  className="logo-image logo-image-header"
+/>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-card">

@@ -7,7 +7,7 @@ const TaglineSection = () => (
     <p className="tagline-text">
       Streamline your inventory with smart product management that scales with your business.
     </p>
-    <span className="tagline-brand">LogBook</span>
+    <span className="tagline-brand">StockSphere</span>
   </section>
 );
 
